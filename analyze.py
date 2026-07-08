@@ -1,8 +1,8 @@
 """
-Semiconductor-Tilted Portfolio — Risk & Concentration Study
+The AI-Chip Basket — Risk & Concentration Study
 Reproducible analysis: downloads prices, loads DuckDB, prints every figure in the README.
 
-Educational only. Weights are illustrative (equal-weight), not investment advice.
+Educational only. The basket is illustrative (equal-weight), not investment advice.
 """
 import duckdb
 import pandas as pd

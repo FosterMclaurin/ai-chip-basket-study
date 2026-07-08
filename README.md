@@ -1,13 +1,14 @@
-# Semiconductor-Tilted Portfolio: A Risk & Concentration Study
+# The AI-Chip Basket: A Risk & Concentration Study
 
-**What does it actually mean to hold a basket of 15 popular AI / semiconductor names?**
-This is a reproducible exploratory data analysis (EDA) of a real-world-style tech-tilted equity
-basket — the kind an enthusiastic 2024–2026 retail investor might have assembled. The goal isn't
-stock tips; it's to show, with data, the **trade-off you take on when a portfolio leans hard into
-one hot sector**: enormous upside, paired with concentrated, correlated, deep-drawdown risk.
+**What does it actually mean to hold a basket of 15 popular AI &amp; chip names?**
+This is a reproducible exploratory data analysis (EDA) of a real-world-style AI/chip-tilted equity
+basket — the kind an enthusiastic 2024–2026 retail investor might have assembled. It is a synthetic,
+illustrative basket, not anyone's real holdings. The goal isn't stock tips; it's to show, with data,
+the **trade-off you take on when a basket leans hard into one hot theme**: enormous upside, paired
+with concentrated, correlated, deep-drawdown risk.
 
-> ⚠️ **Not investment advice.** Educational data analysis only. Weights are illustrative
-> (equal-weight), not a recommendation. Past performance says nothing about the future.
+> ⚠️ **Not investment advice.** Educational data analysis only. The basket is illustrative
+> (an even 1/15 split), not a recommendation. Past performance says nothing about the future.
 
 ## The basket (15 names)
 
@@ -29,7 +30,7 @@ one hot sector**: enormous upside, paired with concentrated, correlated, deep-dr
 | VTI | Vanguard Total Market ETF | Broad-market benchmark |
 | VOO | Vanguard S&P 500 ETF | Broad-market benchmark |
 
-**Weighting:** equal-weight (1/15 each) for all portfolio-level figures. VOO/VTI double as the
+**Weighting:** equal-weight (1/15 each) for all basket-level figures. VOO/VTI double as the
 built-in "boring benchmark" to compare against.
 **Window:** 2024-01-01 → 2026-07-01 (~625 trading days). Data via `yfinance`, stored in DuckDB.
 
@@ -42,7 +43,7 @@ built-in "boring benchmark" to compare against.
 | Annualized volatility | 35.0% | 15.5% |
 | Max drawdown | −33.8% | −18.7% |
 
-\*14 full-history names; NASA excluded from portfolio-level stats (only ~63 days of history).
+\*14 full-history names; NASA excluded from basket-level stats (only ~63 days of history).
 
 **6.5× the S&P's return — but 2.3× the volatility and nearly 2× the worst drawdown.** The excess
 return was not free; it was paid for in stomach.
@@ -81,7 +82,7 @@ statistically comparable to the full-history names.
 ## Data-quality note
 `NASA` (Tema Space Innovators ETF) returned only ~63 rows vs ~625 for every other name — consistent
 with a ~March 2026 launch. It's real and tradeable but too young for long-window statistics
-(moving averages, stable correlations), so it's flagged and excluded from portfolio aggregates.
+(moving averages, stable correlations), so it's flagged and excluded from basket aggregates.
 
 ## Reproduce it
 ```bash
@@ -95,7 +96,7 @@ python analyze.py        # downloads data, loads DuckDB, prints every figure abo
   return math.
 - Correlations are computed on **daily returns, never on price levels** (price-level correlation is
   spuriously ~0.95 for almost any two rising stocks — the classic retail mistake).
-- Equal-weight portfolio return is daily-rebalanced (mean of daily returns).
+- Equal-weight basket return is daily-rebalanced (mean of daily returns).
 
 ## Stack
 `yfinance` (ingest) → `pandas` (reshape) → `DuckDB` (store + SQL) → `numpy` (stats).
