@@ -1,0 +1,430 @@
+<meta charset="utf-8">
+<title>The AI-Chip Basket — Risk & Concentration Tearsheet</title>
+<style>
+  :root {
+    --plane:#f4f5f2; --surface:#fcfcfb; --surface-2:#f0f1ed;
+    --ink:#16160f; --ink-2:#54534d; --muted:#8a8880;
+    --grid:#e4e3db; --baseline:#c6c5bc; --border:rgba(11,11,11,0.10);
+    --basket:#e2611c; --basket-soft:rgba(226,97,28,0.12);
+    --bench:#2a6fd0; --neutral:#9a988f;
+    --good:#0f8a26; --bad:#cc3b34;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --plane:#0c0c0b; --surface:#191917; --surface-2:#201f1d;
+      --ink:#f4f3ee; --ink-2:#c3c2b7; --muted:#8a8880;
+      --grid:#2a2a27; --baseline:#3a3a36; --border:rgba(255,255,255,0.11);
+      --basket:#f2823f; --basket-soft:rgba(242,130,63,0.15);
+      --bench:#4f9bee; --neutral:#7f7d74;
+      --good:#28b13c; --bad:#e8635b;
+    }
+  }
+  :root[data-theme="light"]{
+    --plane:#f4f5f2; --surface:#fcfcfb; --surface-2:#f0f1ed;
+    --ink:#16160f; --ink-2:#54534d; --muted:#8a8880;
+    --grid:#e4e3db; --baseline:#c6c5bc; --border:rgba(11,11,11,0.10);
+    --basket:#e2611c; --basket-soft:rgba(226,97,28,0.12);
+    --bench:#2a6fd0; --neutral:#9a988f; --good:#0f8a26; --bad:#cc3b34;
+  }
+  :root[data-theme="dark"]{
+    --plane:#0c0c0b; --surface:#191917; --surface-2:#201f1d;
+    --ink:#f4f3ee; --ink-2:#c3c2b7; --muted:#8a8880;
+    --grid:#2a2a27; --baseline:#3a3a36; --border:rgba(255,255,255,0.11);
+    --basket:#f2823f; --basket-soft:rgba(242,130,63,0.15);
+    --bench:#4f9bee; --neutral:#7f7d74; --good:#28b13c; --bad:#e8635b;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--plane);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1040px;margin:0 auto;padding:clamp(20px,5vw,64px) clamp(16px,4vw,40px) 80px;}
+
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--basket);font-weight:600;margin:0 0 18px;}
+  h1{font-size:clamp(30px,5.5vw,52px);line-height:1.04;letter-spacing:-0.02em;font-weight:800;
+    text-wrap:balance;margin:0 0 20px;max-width:16ch;}
+  .thesis{font-size:clamp(17px,2.4vw,21px);color:var(--ink-2);max-width:60ch;margin:0 0 8px;text-wrap:pretty;}
+  .meta{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:18px;letter-spacing:.02em;}
+
+  /* hero contrast figure */
+  .hero-fig{display:flex;flex-wrap:wrap;gap:14px;margin:36px 0 8px;}
+  .bigstat{flex:1 1 180px;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:20px 22px;position:relative;overflow:hidden;}
+  .bigstat.lead{border-color:color-mix(in srgb,var(--basket) 45%,var(--border));}
+  .bigstat .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .bigstat .v{font-size:clamp(34px,6vw,50px);font-weight:800;letter-spacing:-0.02em;line-height:1;margin-top:10px;
+    font-variant-numeric:tabular-nums;}
+  .bigstat.lead .v{color:var(--basket);}
+  .bigstat .sub{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:8px;}
+
+  section{margin-top:56px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .sec-num{font-family:var(--mono);font-size:12px;color:var(--basket);font-weight:600;}
+  h2{font-size:clamp(20px,3vw,26px);font-weight:750;letter-spacing:-0.01em;margin:0;}
+  .sec-sub{color:var(--ink-2);font-size:15px;max-width:62ch;margin:8px 0 22px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px clamp(16px,2.5vw,26px);}
+  figure{margin:0;}
+  .fig-title{font-size:14px;font-weight:650;margin:0;}
+  .fig-note{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:3px 0 16px;}
+  svg{width:100%;height:auto;display:block;overflow:visible;}
+  .axis-txt{font-family:var(--mono);font-size:11px;fill:var(--muted);}
+  .axis-lab{font-family:var(--mono);font-size:11px;fill:var(--ink-2);letter-spacing:.04em;text-transform:uppercase;}
+  .gridln{stroke:var(--grid);stroke-width:1;}
+  .baseln{stroke:var(--baseline);stroke-width:1;}
+  .serieslab{font-family:var(--mono);font-size:12.5px;font-weight:600;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--ink-2);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .swatch{width:16px;height:3px;border-radius:2px;display:inline-block;}
+
+  /* tooltip */
+  .chart-host{position:relative;}
+  .tip{position:absolute;pointer-events:none;opacity:0;transform:translate(-50%,-118%);
+    background:var(--ink);color:var(--plane);font-family:var(--mono);font-size:11.5px;line-height:1.5;
+    padding:8px 10px;border-radius:8px;white-space:nowrap;z-index:5;transition:opacity .09s;
+    box-shadow:0 6px 22px rgba(0,0,0,.22);}
+  .tip b{font-weight:700;}
+  .tip .row{display:flex;justify-content:space-between;gap:14px;}
+  .tip .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+  /* scorecard */
+  .scroll{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px;}
+  th,td{text-align:right;padding:9px 12px;font-variant-numeric:tabular-nums;font-family:var(--mono);}
+  th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;
+    border-bottom:1px solid var(--baseline);}
+  td{border-bottom:1px solid var(--grid);}
+  th:first-child,td:first-child{text-align:left;}
+  th:nth-child(2),td:nth-child(2){text-align:left;color:var(--ink-2);}
+  tr td:first-child{font-weight:700;color:var(--ink);}
+  .tick-semi td:first-child::after{content:"◆";color:var(--basket);font-size:9px;margin-left:7px;vertical-align:middle;}
+  .pos{color:var(--good);} .neg{color:var(--bad);}
+  .mbar{display:inline-block;height:7px;border-radius:2px;background:var(--basket);vertical-align:middle;margin-left:8px;opacity:.55;}
+
+  /* insight callouts */
+  .insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+  .insight{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 20px 22px;}
+  .insight .n{font-size:clamp(28px,4vw,38px);font-weight:800;letter-spacing:-.02em;color:var(--basket);
+    font-variant-numeric:tabular-nums;line-height:1;}
+  .insight h3{font-size:14.5px;margin:12px 0 6px;font-weight:700;}
+  .insight p{margin:0;color:var(--ink-2);font-size:13.5px;}
+
+  footer{margin-top:64px;padding-top:26px;border-top:1px solid var(--border);
+    font-size:13px;color:var(--ink-2);}
+  footer .disc{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.7;}
+  footer a{color:var(--basket);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--basket) 35%,transparent);}
+  .method{font-family:var(--mono);font-size:12px;color:var(--ink-2);line-height:1.9;margin-top:10px;}
+  .method b{color:var(--ink);}
+  @media (prefers-reduced-motion:no-preference){
+    .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:dr 1.5s .2s ease-out forwards;}
+    @keyframes dr{to{stroke-dashoffset:0;}}
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Basket EDA · 2024–2026</p>
+  <h1>What a concentrated AI-chip bet really costs you.</h1>
+  <p class="thesis">Fourteen popular AI and chip stocks turned <b style="color:var(--basket)">$100 into $510</b> over 30 months — the S&amp;P 500 reached just $163. This tearsheet shows what you traded for that edge: roughly double the volatility, a 34% drawdown, and a third of the basket riding on semiconductors that all move together.</p>
+  <p class="meta">8,750 daily bars · yfinance → DuckDB · adj-close returns · <b>not investment advice</b></p>
+
+  <div class="hero-fig">
+    <div class="bigstat lead">
+      <div class="k">The basket</div><div class="v" id="hs-basket">+410%</div>
+      <div class="sub">14 AI &amp; chip names</div>
+    </div>
+    <div class="bigstat">
+      <div class="k">S&amp;P 500 (VOO)</div><div class="v" id="hs-voo">+63%</div>
+      <div class="sub">same window, the benchmark</div>
+    </div>
+    <div class="bigstat">
+      <div class="k">Direct in semis</div><div class="v">36%</div>
+      <div class="sub">before ETF look-through</div>
+    </div>
+    <div class="bigstat">
+      <div class="k">Reward per risk</div><div class="v">1.93</div>
+      <div class="sub">Sharpe · vs 1.07 for the S&amp;P</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Growth of $100</h2></div>
+    <p class="sec-sub">The concentration bet paid off spectacularly — but notice how much harder the amber line falls in every drawdown. That gap between the lines is the risk premium, and the whipsaw is what you had to hold through to collect it.</p>
+    <div class="card">
+      <figure>
+        <p class="fig-title">The basket vs. S&amp;P 500 — indexed to $100</p>
+        <p class="fig-note">Hover for weekly values · Jan 2024 → Jul 2026</p>
+        <div class="chart-host">
+          <svg id="growth" viewBox="0 0 920 400" role="img" aria-label="Growth of $100 line chart"></svg>
+          <div class="tip" id="tip-g"></div>
+        </div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--basket)"></i>The basket</span>
+          <span><i class="swatch" style="background:var(--bench)"></i>S&amp;P 500 (VOO)</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Return came strapped to risk</h2></div>
+    <p class="sec-sub">Every name plotted by the return it delivered against the volatility you endured. The benchmarks huddle safely bottom-left; the winners live top-right, in high-volatility, deep-drawdown territory. There is no free lunch on this chart.</p>
+    <div class="card">
+      <figure>
+        <p class="fig-title">Total return vs. annualized volatility</p>
+        <p class="fig-note">Each dot = one holding · hover for detail · top-left = best paid for the risk</p>
+        <div class="chart-host">
+          <svg id="scatter" viewBox="0 0 920 440" role="img" aria-label="Return versus volatility scatter plot"></svg>
+          <div class="tip" id="tip-s"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--basket)"></i>Semiconductors</span>
+          <span><i class="dot" style="background:var(--bench)"></i>Broad-market benchmark</span>
+          <span><i class="dot" style="background:var(--neutral)"></i>Other tech</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Reward for the risk you took</h2></div>
+    <p class="sec-sub">Raw return flatters the wildest names. The Sharpe ratio divides each name's return above cash (a 4.5% risk-free rate) by its volatility — reward per unit of risk. Ranked this way the story reorders: the diversified semi ETF beats every single chip, and one "winner" scored below cash.</p>
+    <div class="card">
+      <figure>
+        <p class="fig-title">Sharpe ratio — excess return per unit of risk</p>
+        <p class="fig-note">Higher = better paid for the risk · dashed line = the whole basket (1.93) · rf 4.5%</p>
+        <div class="chart-host">
+          <svg id="sharpe" viewBox="0 0 920 520" role="img" aria-label="Sharpe ratio ranking bar chart"></svg>
+          <div class="tip" id="tip-sh"></div>
+        </div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--basket)"></i>Semiconductors</span>
+          <span><i class="dot" style="background:var(--bench)"></i>Broad-market benchmark</span>
+          <span><i class="dot" style="background:var(--neutral)"></i>Other tech</span>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Per-stock scorecard</h2></div>
+    <p class="sec-sub">The full basket, sorted by total return. Diamonds (◆) mark direct semiconductor exposure — four of the top six drawdowns belong to them.</p>
+    <div class="card scroll">
+      <table id="score">
+        <thead><tr><th>Ticker</th><th>Sector</th><th>Total return</th><th>Ann. vol</th><th>Max drawdown</th><th>Sharpe</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Three things the data says</h2></div>
+    <div class="insights">
+      <div class="insight">
+        <div class="n">1.53</div>
+        <h3>The smartest bet was the ETF</h3>
+        <p>SMH — the VanEck semiconductor ETF — posted a 1.53 Sharpe, behind only MU and ahead of every individual chip name (NVDA, AVGO, MRVL). Diversified sector exposure delivered nearly the best reward-per-risk with far less single-stock whipsaw.</p>
+      </div>
+      <div class="insight">
+        <div class="n">0.64<span style="font-size:.5em;color:var(--muted);font-weight:600"> / 1.0</span></div>
+        <h3>Five semis, but really one bet</h3>
+        <p>On a 0-to-1 scale where 1.0 = moving in perfect lockstep, the five chip names (NVDA, MU, MRVL, AVGO, SMH) rise and fall together at 0.64. So owning all five isn't five separate bets — it's closer to one chip bet in five wrappers. When semis drop, they mostly drop at once.</p>
+      </div>
+      <div class="insight">
+        <div class="n">8,750</div>
+        <h3>Built to reproduce</h3>
+        <p>Every figure here comes from 8,750 daily price bars — 14 tickers over ~625 trading days (2024–2026), dividend- and split-adjusted. It all regenerates from a single script, so anyone can rerun it or swap in their own tickers.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="method">
+      <b>Method.</b> Returns use dividend/split-adjusted closes. Correlations computed on daily returns, never price levels
+      (price-level correlation is spuriously ~0.95 for any two rising stocks). The basket is daily-rebalanced across all 14 names.<br>
+      <b>Stack.</b> yfinance (ingest) → pandas (reshape) → DuckDB (store + SQL) → numpy (stats).
+    </div>
+    <p style="margin-top:18px">Reproducible source &amp; full write-up: <a href="https://github.com/FosterMclaurin/ai-chip-basket-study">github.com/FosterMclaurin/ai-chip-basket-study</a></p>
+    <p class="disc">Educational data analysis only. Weights are illustrative, not a recommendation. Past performance is not indicative of future results.</p>
+  </footer>
+</div>
+
+<script>
+const DATA = {"curve": [{"d": "2024-01-07", "b": 99.6, "v": 99.1}, {"d": "2024-01-14", "b": 104.7, "v": 100.9}, {"d": "2024-01-21", "b": 105.5, "v": 102.1}, {"d": "2024-01-28", "b": 106.7, "v": 103.3}, {"d": "2024-02-04", "b": 107.6, "v": 104.7}, {"d": "2024-02-11", "b": 115.4, "v": 106.1}, {"d": "2024-02-18", "b": 112.0, "v": 105.8}, {"d": "2024-02-25", "b": 112.2, "v": 107.6}, {"d": "2024-03-03", "b": 117.6, "v": 108.6}, {"d": "2024-03-10", "b": 118.5, "v": 108.4}, {"d": "2024-03-17", "b": 115.9, "v": 108.3}, {"d": "2024-03-24", "b": 122.0, "v": 110.8}, {"d": "2024-03-31", "b": 122.1, "v": 111.1}, {"d": "2024-04-07", "b": 118.0, "v": 110.1}, {"d": "2024-04-14", "b": 115.5, "v": 108.5}, {"d": "2024-04-21", "b": 105.6, "v": 105.2}, {"d": "2024-04-28", "b": 114.6, "v": 108.0}, {"d": "2024-05-05", "b": 115.4, "v": 108.6}, {"d": "2024-05-12", "b": 118.9, "v": 110.7}, {"d": "2024-05-19", "b": 124.8, "v": 112.5}, {"d": "2024-05-26", "b": 128.0, "v": 112.5}, {"d": "2024-06-02", "b": 124.0, "v": 112.0}, {"d": "2024-06-09", "b": 129.8, "v": 113.4}, {"d": "2024-06-16", "b": 137.2, "v": 115.3}, {"d": "2024-06-23", "b": 139.4, "v": 116.0}, {"d": "2024-06-30", "b": 139.4, "v": 116.0}, {"d": "2024-07-07", "b": 145.0, "v": 118.3}, {"d": "2024-07-14", "b": 145.4, "v": 119.4}, {"d": "2024-07-21", "b": 136.4, "v": 117.0}, {"d": "2024-07-28", "b": 130.6, "v": 116.1}, {"d": "2024-08-04", "b": 121.8, "v": 113.6}, {"d": "2024-08-11", "b": 124.7, "v": 113.6}, {"d": "2024-08-18", "b": 135.7, "v": 118.2}, {"d": "2024-08-25", "b": 139.0, "v": 119.9}, {"d": "2024-09-01", "b": 135.7, "v": 120.2}, {"d": "2024-09-08", "b": 124.8, "v": 115.2}, {"d": "2024-09-15", "b": 141.2, "v": 119.8}, {"d": "2024-09-22", "b": 144.1, "v": 121.5}, {"d": "2024-09-29", "b": 150.1, "v": 122.3}, {"d": "2024-10-06", "b": 151.1, "v": 122.5}, {"d": "2024-10-13", "b": 155.8, "v": 124.0}, {"d": "2024-10-20", "b": 158.1, "v": 125.0}, {"d": "2024-10-27", "b": 157.8, "v": 123.9}, {"d": "2024-11-03", "b": 152.8, "v": 122.2}, {"d": "2024-11-10", "b": 168.0, "v": 128.0}, {"d": "2024-11-17", "b": 164.2, "v": 125.3}, {"d": "2024-11-24", "b": 174.0, "v": 127.4}, {"d": "2024-12-01", "b": 175.1, "v": 128.8}, {"d": "2024-12-08", "b": 186.7, "v": 130.0}, {"d": "2024-12-15", "b": 189.2, "v": 129.3}, {"d": "2024-12-22", "b": 185.0, "v": 126.8}, {"d": "2024-12-29", "b": 188.3, "v": 127.7}, {"d": "2025-01-05", "b": 190.3, "v": 127.1}, {"d": "2025-01-12", "b": 183.5, "v": 124.6}, {"d": "2025-01-19", "b": 191.8, "v": 128.3}, {"d": "2025-01-26", "b": 202.5, "v": 130.5}, {"d": "2025-02-02", "b": 193.1, "v": 129.2}, {"d": "2025-02-09", "b": 199.7, "v": 128.9}, {"d": "2025-02-16", "b": 205.8, "v": 130.9}, {"d": "2025-02-23", "b": 197.6, "v": 128.8}, {"d": "2025-03-02", "b": 182.4, "v": 127.5}, {"d": "2025-03-09", "b": 170.5, "v": 123.6}, {"d": "2025-03-16", "b": 172.2, "v": 120.8}, {"d": "2025-03-23", "b": 171.2, "v": 121.4}, {"d": "2025-03-30", "b": 159.5, "v": 119.7}, {"d": "2025-04-06", "b": 138.7, "v": 109.0}, {"d": "2025-04-13", "b": 154.0, "v": 114.9}, {"d": "2025-04-20", "b": 148.7, "v": 113.4}, {"d": "2025-04-27", "b": 164.8, "v": 118.6}, {"d": "2025-05-04", "b": 174.8, "v": 122.0}, {"d": "2025-05-11", "b": 173.3, "v": 121.5}, {"d": "2025-05-18", "b": 191.6, "v": 128.0}, {"d": "2025-05-25", "b": 188.1, "v": 124.7}, {"d": "2025-06-01", "b": 190.8, "v": 126.9}, {"d": "2025-06-08", "b": 218.2, "v": 129.0}, {"d": "2025-06-15", "b": 215.7, "v": 128.5}, {"d": "2025-06-22", "b": 214.7, "v": 128.3}, {"d": "2025-06-29", "b": 227.7, "v": 132.8}, {"d": "2025-07-06", "b": 232.3, "v": 135.2}, {"d": "2025-07-13", "b": 229.9, "v": 134.7}, {"d": "2025-07-20", "b": 239.2, "v": 135.6}, {"d": "2025-07-27", "b": 239.1, "v": 137.6}, {"d": "2025-08-03", "b": 238.4, "v": 134.3}, {"d": "2025-08-10", "b": 254.4, "v": 137.6}, {"d": "2025-08-17", "b": 254.9, "v": 139.0}, {"d": "2025-08-24", "b": 252.3, "v": 139.4}, {"d": "2025-08-31", "b": 251.4, "v": 139.4}, {"d": "2025-09-07", "b": 252.8, "v": 139.8}, {"d": "2025-09-14", "b": 280.2, "v": 142.0}, {"d": "2025-09-21", "b": 295.1, "v": 143.8}, {"d": "2025-09-28", "b": 297.0, "v": 143.4}, {"d": "2025-10-05", "b": 314.7, "v": 145.0}, {"d": "2025-10-12", "b": 316.4, "v": 141.5}, {"d": "2025-10-19", "b": 321.2, "v": 143.9}, {"d": "2025-10-26", "b": 330.3, "v": 146.7}, {"d": "2025-11-02", "b": 343.3, "v": 147.8}, {"d": "2025-11-09", "b": 328.0, "v": 145.4}, {"d": "2025-11-16", "b": 318.0, "v": 145.6}, {"d": "2025-11-23", "b": 298.6, "v": 142.8}, {"d": "2025-11-30", "b": 326.5, "v": 148.1}, {"d": "2025-12-07", "b": 336.5, "v": 148.6}, {"d": "2025-12-14", "b": 334.8, "v": 147.7}, {"d": "2025-12-21", "b": 340.4, "v": 147.9}, {"d": "2025-12-28", "b": 343.2, "v": 150.0}, {"d": "2026-01-04", "b": 347.1, "v": 148.5}, {"d": "2026-01-11", "b": 361.3, "v": 150.8}, {"d": "2026-01-18", "b": 368.1, "v": 150.3}, {"d": "2026-01-25", "b": 368.1, "v": 149.8}, {"d": "2026-02-01", "b": 361.7, "v": 150.3}, {"d": "2026-02-08", "b": 351.2, "v": 150.1}, {"d": "2026-02-15", "b": 352.1, "v": 148.1}, {"d": "2026-02-22", "b": 350.2, "v": 149.8}, {"d": "2026-03-01", "b": 344.5, "v": 149.1}, {"d": "2026-03-08", "b": 349.5, "v": 146.1}, {"d": "2026-03-15", "b": 352.8, "v": 143.9}, {"d": "2026-03-22", "b": 354.1, "v": 141.3}, {"d": "2026-03-29", "b": 335.2, "v": 138.2}, {"d": "2026-04-05", "b": 356.7, "v": 142.9}, {"d": "2026-04-12", "b": 377.9, "v": 148.1}, {"d": "2026-04-19", "b": 416.0, "v": 154.7}, {"d": "2026-04-26", "b": 433.8, "v": 155.6}, {"d": "2026-05-03", "b": 439.2, "v": 157.1}, {"d": "2026-05-10", "b": 467.6, "v": 160.7}, {"d": "2026-05-17", "b": 476.0, "v": 161.1}, {"d": "2026-05-24", "b": 492.3, "v": 162.5}, {"d": "2026-05-31", "b": 527.6, "v": 164.9}, {"d": "2026-06-07", "b": 490.0, "v": 160.7}, {"d": "2026-06-14", "b": 499.9, "v": 161.7}, {"d": "2026-06-21", "b": 517.4, "v": 163.1}, {"d": "2026-06-28", "b": 484.3, "v": 159.4}, {"d": "2026-07-05", "b": 510.4, "v": 163.3}], "stocks": [{"t": "MU", "sector": "Semis", "ret": 1313, "vol": 65, "dd": -58, "sharpe": 1.9, "days": 625}, {"t": "PL", "sector": "Space", "ret": 1292, "vol": 94, "dd": -54, "sharpe": 1.53, "days": 625}, {"t": "PLTR", "sector": "Software", "ret": 604, "vol": 64, "dd": -48, "sharpe": 1.47, "days": 625}, {"t": "APLD", "sector": "Data centers", "ret": 436, "vol": 127, "dd": -72, "sharpe": 1.1, "days": 625}, {"t": "MRVL", "sector": "Semis", "ret": 416, "vol": 69, "dd": -61, "sharpe": 1.24, "days": 625}, {"t": "NVDA", "sector": "Semis", "ret": 316, "vol": 49, "dd": -37, "sharpe": 1.33, "days": 625}, {"t": "SMH", "sector": "Semi ETF", "ret": 291, "vol": 38, "dd": -36, "sharpe": 1.53, "days": 625}, {"t": "AVGO", "sector": "Semis", "ret": 257, "vol": 52, "dd": -41, "sharpe": 1.16, "days": 625}, {"t": "CRWD", "sector": "Cybersecurity", "ret": 209, "vol": 48, "dd": -44, "sharpe": 1.1, "days": 625}, {"t": "ANET", "sector": "Networking", "ret": 193, "vol": 52, "dd": -50, "sharpe": 1.02, "days": 625}, {"t": "GOOGL", "sector": "Big Tech", "ret": 161, "vol": 31, "dd": -30, "sharpe": 1.27, "days": 625}, {"t": "VOO", "sector": "Broad ETF", "ret": 63, "vol": 15, "dd": -19, "sharpe": 1.07, "days": 625}, {"t": "VTI", "sector": "Broad ETF", "ret": 62, "vol": 16, "dd": -19, "sharpe": 1.01, "days": 625}, {"t": "MSFT", "sector": "Big Tech", "ret": 3, "vol": 25, "dd": -34, "sharpe": -0.01, "days": 625}], "summary": {"basket_ret": 410, "voo_ret": 63, "basket_vol": 35, "voo_vol": 16, "basket_dd": -34, "voo_dd": -19, "semi_pct": 36, "semi_corr": 0.64, "rows": 8750, "basket_sharpe": 1.93, "voo_sharpe": 1.07, "rf": 4.5, "start": "2024-01-07", "end": "2026-07-05"}};
+const $=(id)=>document.getElementById(id);
+const SVGNS="http://www.w3.org/2000/svg";
+function el(n,a){const e=document.createElementNS(SVGNS,n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+/* ---------- Growth chart ---------- */
+function growth(){
+  const svg=$("growth"); svg.innerHTML="";
+  const W=920,H=400,mL=52,mR=92,mT=20,mB=34;
+  const x0=mL,x1=W-mR,y0=mT,y1=H-mB;
+  const c=DATA.curve, N=c.length;
+  const yMin=90,yMax=540;
+  const X=i=>x0+i/(N-1)*(x1-x0);
+  const Y=v=>y1-(v-yMin)/(yMax-yMin)*(y1-y0);
+  // gridlines
+  [100,200,300,400,500].forEach(g=>{
+    svg.appendChild(el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),class:g===100?"baseln":"gridln"}));
+    const t=el("text",{x:x0-9,y:Y(g)+3.5,class:"axis-txt","text-anchor":"end"});t.textContent="$"+g;svg.appendChild(t);
+  });
+  // x ticks by year/half
+  const marks=[["2024-01","’24"],["2024-07","H2 ’24"],["2025-01","’25"],["2025-07","H2 ’25"],["2026-01","’26"],["2026-07","Jul ’26"]];
+  marks.forEach(([pre,lab])=>{
+    let idx=c.findIndex(p=>p.d.startsWith(pre)); if(idx<0)idx=c.findIndex(p=>p.d>=pre); if(idx<0)return;
+    const t=el("text",{x:X(idx),y:H-14,class:"axis-txt","text-anchor":"middle"});t.textContent=lab;svg.appendChild(t);
+  });
+  const path=(key,color,cls)=>{
+    let d="";c.forEach((p,i)=>{d+=(i?"L":"M")+X(i).toFixed(1)+" "+Y(p[key]).toFixed(1)+" ";});
+    const pth=el("path",{d,fill:"none",stroke:color,"stroke-width":key==="b"?2.6:2,"stroke-linejoin":"round","stroke-linecap":"round"});
+    svg.appendChild(pth);
+    if(cls){const L=Math.ceil(pth.getTotalLength());pth.style.setProperty("--len",L);pth.setAttribute("class",cls);}
+    return pth;
+  };
+  path("v",css("--bench"),"draw");
+  path("b",css("--basket"),"draw");
+  // end labels
+  const lab=(key,txt,color)=>{const t=el("text",{x:x1+8,y:Y(c[N-1][key])+4,class:"serieslab",fill:color});t.textContent=txt;svg.appendChild(t);};
+  lab("b","Basket",css("--basket"));
+  lab("v","S&P 500",css("--bench"));
+  // hover
+  const cross=el("line",{y1:y0,y2:y1,class:"gridln",opacity:0}); cross.style.stroke=css("--baseline");svg.appendChild(cross);
+  const mb=el("circle",{r:4.5,fill:css("--basket"),stroke:css("--surface"),"stroke-width":2,opacity:0});svg.appendChild(mb);
+  const mv=el("circle",{r:4.5,fill:css("--bench"),stroke:css("--surface"),"stroke-width":2,opacity:0});svg.appendChild(mv);
+  const tip=$("tip-g");
+  const ov=el("rect",{x:x0,y:y0,width:x1-x0,height:y1-y0,fill:"transparent"});svg.appendChild(ov);
+  const host=svg.parentElement;
+  function move(e){
+    const r=svg.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width*W;
+    let i=Math.round((px-x0)/(x1-x0)*(N-1)); i=Math.max(0,Math.min(N-1,i));
+    const p=c[i];
+    cross.setAttribute("x1",X(i));cross.setAttribute("x2",X(i));cross.setAttribute("opacity",1);
+    mb.setAttribute("cx",X(i));mb.setAttribute("cy",Y(p.b));mb.setAttribute("opacity",1);
+    mv.setAttribute("cx",X(i));mv.setAttribute("cy",Y(p.v));mv.setAttribute("opacity",1);
+    tip.style.opacity=1;
+    tip.style.left=(X(i)/W*r.width)+"px";
+    tip.style.top=(Y(Math.max(p.b,p.v))/H*r.height)+"px";
+    tip.innerHTML=`<b>${p.d}</b>
+      <div class="row"><span><i class="sw" style="background:var(--basket)"></i>Basket</span><b>$${p.b.toFixed(0)}</b></div>
+      <div class="row"><span><i class="sw" style="background:var(--bench)"></i>S&P 500</span><b>$${p.v.toFixed(0)}</b></div>`;
+  }
+  function leave(){cross.setAttribute("opacity",0);mb.setAttribute("opacity",0);mv.setAttribute("opacity",0);tip.style.opacity=0;}
+  ov.addEventListener("mousemove",move);ov.addEventListener("mouseleave",leave);
+  svg.addEventListener("touchstart",e=>{if(e.touches[0])move(e.touches[0]);},{passive:true});
+  svg.addEventListener("touchmove",e=>{if(e.touches[0]){move(e.touches[0]);}},{passive:true});
+}
+
+/* ---------- Scatter ---------- */
+function scatter(){
+  const svg=$("scatter"); svg.innerHTML="";
+  const W=920,H=440,mL=54,mR=26,mT=22,mB=52;
+  const x0=mL,x1=W-mR,y0=mT,y1=H-mB;
+  const vMax=135, rMax=1400;
+  const X=v=>x0+v/vMax*(x1-x0);
+  const Y=r=>y1-r/rMax*(y1-y0);
+  // grids
+  [0,300,600,900,1200].forEach(g=>{
+    svg.appendChild(el("line",{x1:x0,x2:x1,y1:Y(g),y2:Y(g),class:g===0?"baseln":"gridln"}));
+    const t=el("text",{x:x0-9,y:Y(g)+3.5,class:"axis-txt","text-anchor":"end"});t.textContent=g+"%";svg.appendChild(t);
+  });
+  [0,25,50,75,100,125].forEach(g=>{
+    svg.appendChild(el("line",{x1:X(g),x2:X(g),y1:y0,y2:y1,class:"gridln"}));
+    const t=el("text",{x:X(g),y:H-30,class:"axis-txt","text-anchor":"middle"});t.textContent=g+"%";svg.appendChild(t);
+  });
+  // axis labels
+  let ax=el("text",{x:(x0+x1)/2,y:H-8,class:"axis-lab","text-anchor":"middle"});ax.textContent="Annualized volatility";svg.appendChild(ax);
+  let ay=el("text",{x:-((y0+y1)/2),y:14,class:"axis-lab","text-anchor":"middle",transform:"rotate(-90)"});ay.textContent="Total return";svg.appendChild(ay);
+  const colOf=s=>{if(s==="Semis"||s==="Semi ETF")return css("--basket");if(s==="Broad ETF")return css("--bench");return css("--neutral");};
+  const labels={MU:1,PL:1,APLD:1,NVDA:1,MRVL:1,VOO:1,MSFT:1,PLTR:1};
+  const tip=$("tip-s");
+  DATA.stocks.forEach(s=>{
+    const isN=s.days<100;
+    const cx=X(s.vol),cy=Y(s.ret),col=colOf(s.sector);
+    const c=el("circle",{cx,cy,r:7,fill:isN?"var(--surface)":col,stroke:col,"stroke-width":isN?1.6:1.4,
+      "stroke-opacity":.9,"fill-opacity":isN?1:.82,cursor:"pointer"});
+    svg.appendChild(c);
+    if(labels[s.t]){const t=el("text",{x:cx+(s.t==="VOO"?11:0),y:cy-12,class:"serieslab",fill:"var(--ink)","text-anchor":"middle","font-size":11.5});t.textContent=s.t;svg.appendChild(t);}
+    function on(e){c.setAttribute("r",9);tip.style.opacity=1;
+      const r=svg.getBoundingClientRect();
+      tip.style.left=(cx/W*r.width)+"px";tip.style.top=(cy/H*r.height)+"px";
+      tip.innerHTML=`<b>${s.t}</b> · ${s.sector}
+        <div class="row"><span>Return</span><b>+${s.ret}%</b></div>
+        <div class="row"><span>Volatility</span><b>${s.vol}%</b></div>
+        <div class="row"><span>Max drawdown</span><b>${s.dd}%</b></div>${isN?'<div class="row"><span>History</span><b>63 days</b></div>':''}`;
+    }
+    function off(){c.setAttribute("r",7);tip.style.opacity=0;}
+    c.addEventListener("mouseenter",on);c.addEventListener("mouseleave",off);
+    c.addEventListener("touchstart",e=>{on(e);},{passive:true});
+  });
+}
+
+/* ---------- Scorecard ---------- */
+function score(){
+  const tb=$("score").querySelector("tbody");
+  const maxR=Math.max(...DATA.stocks.map(s=>s.ret));
+  DATA.stocks.forEach(s=>{
+    const semi=(s.sector==="Semis"||s.sector==="Semi ETF");
+    const tr=document.createElement("tr"); if(semi)tr.className="tick-semi";
+    const bw=Math.max(3,s.ret/maxR*60);
+    tr.innerHTML=`<td>${s.t}</td><td>${s.sector}</td>
+      <td class="pos">+${s.ret}%<i class="mbar" style="width:${bw}px"></i></td>
+      <td>${s.vol}%</td><td class="neg">${s.dd}%</td>
+      <td class="${s.sharpe<0?'neg':''}">${s.sharpe.toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- Sharpe ranking (horizontal bars) ---------- */
+function sharpeChart(){
+  const svg=$("sharpe"); svg.innerHTML="";
+  const W=920,rowH=30,mT=24,mB=36,mL=62,mR=52;
+  const arr=[...DATA.stocks].sort((a,b)=>b.sharpe-a.sharpe);
+  const H=mT+arr.length*rowH+mB;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const x0=mL,x1=W-mR;
+  const bs=DATA.summary.basket_sharpe;
+  const lo=Math.min(0,...arr.map(s=>s.sharpe));
+  const hi=Math.max(bs,...arr.map(s=>s.sharpe));
+  const X=v=>x0+(v-lo)/(hi-lo)*(x1-x0);
+  const zero=X(0);
+  for(let g=Math.ceil(lo*2)/2; g<=hi; g+=0.5){
+    svg.appendChild(el("line",{x1:X(g),x2:X(g),y1:mT,y2:H-mB,class:Math.abs(g)<1e-9?"baseln":"gridln"}));
+    const t=el("text",{x:X(g),y:H-16,class:"axis-txt","text-anchor":"middle"});t.textContent=g.toFixed(1);svg.appendChild(t);
+  }
+  const colOf=s=>{if(s==="Semis"||s==="Semi ETF")return css("--basket");if(s==="Broad ETF")return css("--bench");return css("--neutral");};
+  const tip=$("tip-sh");
+  arr.forEach((s,i)=>{
+    const y=mT+i*rowH+rowH/2, col=colOf(s.sector), bx=X(s.sharpe), isN=s.days<100;
+    const rx=Math.min(zero,bx), w=Math.max(Math.abs(bx-zero),1);
+    const bar=el("rect",{x:rx,y:y-8,width:w,height:16,rx:3,fill:col,"fill-opacity":isN?0.42:0.88,cursor:"pointer"});
+    svg.appendChild(bar);
+    const lab=el("text",{x:x0-10,y:y+4,class:"axis-txt","text-anchor":"end",fill:"var(--ink)"});
+    lab.setAttribute("font-weight","700");lab.textContent=s.t;svg.appendChild(lab);
+    const vl=el("text",{x:bx+(s.sharpe<0?-6:6),y:y+4,class:"serieslab",fill:"var(--ink-2)",
+      "text-anchor":s.sharpe<0?"end":"start","font-size":11});
+    vl.textContent=s.sharpe.toFixed(2)+(isN?"*":"");svg.appendChild(vl);
+    function on(){bar.setAttribute("fill-opacity",1);tip.style.opacity=1;
+      const rc=svg.getBoundingClientRect();
+      tip.style.left=(bx/W*rc.width)+"px";tip.style.top=(y/H*rc.height)+"px";
+      tip.innerHTML=`<b>${s.t}</b> · ${s.sector}
+        <div class="row"><span>Sharpe</span><b>${s.sharpe.toFixed(2)}</b></div>
+        <div class="row"><span>Return</span><b>+${s.ret}%</b></div>
+        <div class="row"><span>Volatility</span><b>${s.vol}%</b></div>`;}
+    function off(){bar.setAttribute("fill-opacity",isN?0.42:0.88);tip.style.opacity=0;}
+    bar.addEventListener("mouseenter",on);bar.addEventListener("mouseleave",off);
+    bar.addEventListener("touchstart",on,{passive:true});
+  });
+  // whole-basket reference line
+  svg.appendChild(el("line",{x1:X(bs),x2:X(bs),y1:mT-6,y2:H-mB,stroke:css("--basket"),"stroke-width":1.5,"stroke-dasharray":"5 4"}));
+  const bt=el("text",{x:X(bs),y:mT-10,class:"serieslab",fill:css("--basket"),"text-anchor":"middle","font-size":11});
+  bt.textContent="basket "+bs.toFixed(2);svg.appendChild(bt);
+}
+growth();scatter();sharpeChart();score();
+window.addEventListener("resize",()=>{growth();scatter();sharpeChart();});
+</script>
