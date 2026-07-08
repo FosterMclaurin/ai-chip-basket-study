@@ -11,6 +11,7 @@ import yfinance as yf
 
 START, END = "2024-01-01", "2026-07-01"
 DB = "portfolio.duckdb"
+RF_ANNUAL = 0.045  # assumed risk-free rate (~T-bill avg over the window); documented, not zero
 
 BASKET = {
     "NVDA": "Semis", "MU": "Semis", "MRVL": "Semis", "AVGO": "Semis", "SMH": "ETF-semis",
@@ -66,22 +67,30 @@ def analyze():
     for t in piv.columns:
         s = piv[t].dropna()
         total = s.iloc[-1] / s.iloc[0] - 1
-        vol = s.pct_change().std() * np.sqrt(252)
+        daily = s.pct_change().dropna()
+        ann_ret = daily.mean() * 252          # annualized average return (Sharpe numerator base)
+        vol = daily.std() * np.sqrt(252)
+        sharpe = (ann_ret - RF_ANNUAL) / vol  # excess return per unit of risk
         dd = (s / s.cummax() - 1).min()
-        rows.append((t, len(s), total, vol, dd))
-    for t, n, total, vol, dd in sorted(rows, key=lambda r: -r[2]):
-        print(f"{t:6} {n:4}d  ret {total:+7.1%}  vol {vol:6.1%}  maxDD {dd:7.1%}")
+        rows.append((t, len(s), total, vol, dd, sharpe))
+    # sorted by Sharpe now — the whole point is the risk-adjusted reorder
+    for t, n, total, vol, dd, sharpe in sorted(rows, key=lambda r: -r[5]):
+        print(f"{t:6} {n:4}d  ret {total:+7.1%}  vol {vol:6.1%}  maxDD {dd:7.1%}  Sharpe {sharpe:5.2f}")
 
     # Equal-weight portfolio (exclude NASA: too little history)
     full = [c for c in piv.columns if c != "NASA"]
     ew = rets[full].mean(axis=1)
     curve = (1 + ew).cumprod()
+
+    def sharpe_of(daily):
+        return (daily.mean() * 252 - RF_ANNUAL) / (daily.std() * np.sqrt(252))
+
     print("\n=== Equal-weight basket (NASA excluded) vs VOO ===")
     print(f"basket : ret {curve.iloc[-1]-1:+.1%}  vol {ew.std()*np.sqrt(252):.1%}  "
-          f"maxDD {(curve/curve.cummax()-1).min():.1%}")
+          f"maxDD {(curve/curve.cummax()-1).min():.1%}  Sharpe {sharpe_of(ew):.2f}")
     vs = piv["VOO"]
     print(f"VOO    : ret {vs.iloc[-1]/vs.iloc[0]-1:+.1%}  vol {rets['VOO'].std()*np.sqrt(252):.1%}  "
-          f"maxDD {(vs/vs.cummax()-1).min():.1%}")
+          f"maxDD {(vs/vs.cummax()-1).min():.1%}  Sharpe {sharpe_of(rets['VOO'].dropna()):.2f}")
 
     # Concentration
     counts = pd.Series(BASKET).value_counts()

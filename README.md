@@ -42,11 +42,13 @@ built-in "boring benchmark" to compare against.
 | Total return | **+410%** | +63% |
 | Annualized volatility | 35.0% | 15.5% |
 | Max drawdown | −33.8% | −18.7% |
+| Sharpe ratio (rf 4.5%) | **1.93** | 1.07 |
 
 \*14 full-history names; NASA excluded from basket-level stats (only ~63 days of history).
 
 **6.5× the S&P's return — but 2.3× the volatility and nearly 2× the worst drawdown.** The excess
-return was not free; it was paid for in stomach.
+return was not free; it was paid for in stomach. Yet even after adjusting for that risk, the basket's
+**Sharpe of 1.93 beats the S&P's 1.07** — over this window, the concentration was rewarded per unit of risk, not just in raw return.
 
 ### 2. A third of the basket is *directly* semiconductors
 Equal-weight, **33.3%** sits in semis (NVDA, MU, MRVL, AVGO + the SMH ETF) before even looking
@@ -57,24 +59,31 @@ Average pairwise **return** correlation among the semis (NVDA, MU, MRVL, AVGO, S
 Holding five semiconductor tickers is closer to holding one big leveraged bet than to being
 diversified. Across all 14 names the average correlation is 0.45.
 
-### 4. Per-stock scorecard (2024-01 → 2026-07)
-| Ticker | Total return | Ann. vol | Max drawdown |
-|--------|-------------:|---------:|-------------:|
-| MU | +1313% | 65% | −58% |
-| PL | +1292% | 94% | −54% |
-| PLTR | +604% | 64% | −48% |
-| APLD | +436% | 127% | −72% |
-| MRVL | +416% | 69% | −61% |
-| NVDA | +316% | 49% | −37% |
-| SMH | +291% | 38% | −36% |
-| AVGO | +257% | 52% | −41% |
-| CRWD | +209% | 48% | −44% |
-| ANET | +194% | 52% | −50% |
-| GOOGL | +161% | 31% | −30% |
-| VOO | +63% | 16% | −19% |
-| VTI | +62% | 16% | −19% |
-| MSFT | +3% | 25% | −35% |
-| NASA† | +21% | 69% | −37% |
+### 4. Risk-adjusted, the smart bet was the *ETF* — not the hottest stock
+Ranking by **Sharpe ratio** (excess return over a 4.5% risk-free rate, per unit of volatility) reorders the winners:
+
+- **SMH** (the semiconductor ETF) posts a **1.53 Sharpe — 2nd only to MU**, ahead of every *individual* chip (NVDA 1.33, MRVL 1.24, AVGO 1.16). Diversified sector exposure delivered nearly the best reward-per-risk with far less single-stock whipsaw.
+- **APLD** looks elite at +436%, but its **127% volatility** drops its Sharpe to 1.10 — a return that wasn't worth the risk.
+- **MSFT** posted a **negative Sharpe (−0.01)**: its +3% didn't even beat the ~4.5% you'd earn holding cash.
+
+### 5. Per-stock scorecard (2024-01 → 2026-07)
+| Ticker | Total return | Ann. vol | Max drawdown | Sharpe |
+|--------|-------------:|---------:|-------------:|-------:|
+| MU | +1313% | 65% | −58% | 1.90 |
+| PL | +1292% | 94% | −54% | 1.53 |
+| PLTR | +604% | 64% | −48% | 1.47 |
+| APLD | +436% | 127% | −72% | 1.10 |
+| MRVL | +416% | 69% | −61% | 1.24 |
+| NVDA | +316% | 49% | −37% | 1.33 |
+| SMH | +291% | 38% | −36% | 1.53 |
+| AVGO | +257% | 52% | −41% | 1.16 |
+| CRWD | +209% | 48% | −44% | 1.10 |
+| ANET | +194% | 52% | −50% | 1.02 |
+| GOOGL | +161% | 31% | −30% | 1.27 |
+| VOO | +63% | 16% | −19% | 1.07 |
+| VTI | +62% | 16% | −19% | 1.01 |
+| MSFT | +3% | 25% | −35% | −0.01 |
+| NASA† | +21% | 69% | −37% | 1.38 |
 
 †NASA has only ~63 trading days (recent launch) — figures shown for completeness but not
 statistically comparable to the full-history names.
@@ -97,6 +106,9 @@ python analyze.py        # downloads data, loads DuckDB, prints every figure abo
 - Correlations are computed on **daily returns, never on price levels** (price-level correlation is
   spuriously ~0.95 for almost any two rising stocks — the classic retail mistake).
 - Equal-weight basket return is daily-rebalanced (mean of daily returns).
+- **Sharpe ratio** = (annualized return − 4.5% risk-free) ÷ annualized volatility. The risk-free rate
+  is a documented constant (≈ the T-bill average over the window), **not zero** — using zero would
+  overstate every Sharpe.
 
 ## Stack
 `yfinance` (ingest) → `pandas` (reshape) → `DuckDB` (store + SQL) → `numpy` (stats).
