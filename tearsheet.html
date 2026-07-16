@@ -245,6 +245,9 @@
     <div class="method">
       <b>Method.</b> Returns use dividend/split-adjusted closes. Correlations computed on daily returns, never price levels
       (price-level correlation is spuriously ~0.95 for any two rising stocks). The basket is daily-rebalanced across all 14 names.<br>
+      <b>Biggest caveat — selection bias.</b> These 14 names were picked with hindsight as known AI/chip winners, so the +410%
+      partly reflects choosing what already went up. It measures what these specific winners did, not what the strategy earns going
+      forward. Single bull-market window; no fees or taxes; Sharpe ignores fat-tail risk. Full limitations in the README.<br>
       <b>Stack.</b> yfinance (ingest) → pandas (reshape) → DuckDB (store + SQL) → numpy (stats).
     </div>
     <p style="margin-top:18px">Reproducible source &amp; full write-up: <a href="https://github.com/FosterMclaurin/ai-chip-basket-study">github.com/FosterMclaurin/ai-chip-basket-study</a></p>

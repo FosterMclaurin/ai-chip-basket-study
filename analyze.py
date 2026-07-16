@@ -13,11 +13,14 @@ START, END = "2024-01-01", "2026-07-01"
 DB = "portfolio.duckdb"
 RF_ANNUAL = 0.045  # assumed risk-free rate (~T-bill avg over the window); documented, not zero
 
+# 14 names. NASA (Tema Space Innovators ETF) was dropped as an outlier: it launched
+# ~March 2026, so it had only ~63 trading days vs ~625 for the rest — too little
+# history for comparable volatility, drawdown, or correlation stats.
 BASKET = {
     "NVDA": "Semis", "MU": "Semis", "MRVL": "Semis", "AVGO": "Semis", "SMH": "ETF-semis",
     "GOOGL": "Big Tech", "MSFT": "Big Tech", "CRWD": "Cybersecurity", "ANET": "Networking",
     "APLD": "Data centers", "PLTR": "Software/Defense", "PL": "Space/Imaging",
-    "NASA": "ETF-space", "VTI": "ETF-broad", "VOO": "ETF-broad",
+    "VTI": "ETF-broad", "VOO": "ETF-broad",
 }
 
 
@@ -77,15 +80,15 @@ def analyze():
     for t, n, total, vol, dd, sharpe in sorted(rows, key=lambda r: -r[5]):
         print(f"{t:6} {n:4}d  ret {total:+7.1%}  vol {vol:6.1%}  maxDD {dd:7.1%}  Sharpe {sharpe:5.2f}")
 
-    # Equal-weight portfolio (exclude NASA: too little history)
-    full = [c for c in piv.columns if c != "NASA"]
+    # Equal-weight basket across all 14 names
+    full = list(piv.columns)
     ew = rets[full].mean(axis=1)
     curve = (1 + ew).cumprod()
 
     def sharpe_of(daily):
         return (daily.mean() * 252 - RF_ANNUAL) / (daily.std() * np.sqrt(252))
 
-    print("\n=== Equal-weight basket (NASA excluded) vs VOO ===")
+    print("\n=== Equal-weight basket (14 names) vs VOO ===")
     print(f"basket : ret {curve.iloc[-1]-1:+.1%}  vol {ew.std()*np.sqrt(252):.1%}  "
           f"maxDD {(curve/curve.cummax()-1).min():.1%}  Sharpe {sharpe_of(ew):.2f}")
     vs = piv["VOO"]

@@ -1,6 +1,6 @@
 # The AI-Chip Basket: A Risk & Concentration Study
 
-**What does it actually mean to hold a basket of 15 popular AI &amp; chip names?**
+**What does it actually mean to hold a basket of 14 popular AI &amp; chip names?**
 This is a reproducible exploratory data analysis (EDA) of a real-world-style AI/chip-tilted equity
 basket — the kind an enthusiastic 2024–2026 retail investor might have assembled. It is a synthetic,
 illustrative basket, not anyone's real holdings. The goal isn't stock tips; it's to show, with data,
@@ -8,9 +8,9 @@ the **trade-off you take on when a basket leans hard into one hot theme**: enorm
 with concentrated, correlated, deep-drawdown risk.
 
 > ⚠️ **Not investment advice.** Educational data analysis only. The basket is illustrative
-> (an even 1/15 split), not a recommendation. Past performance says nothing about the future.
+> (an even 1/14 split), not a recommendation. Past performance says nothing about the future.
 
-## The basket (15 names)
+## The basket (14 names)
 
 | Ticker | Company | Bucket |
 |--------|---------|--------|
@@ -26,11 +26,10 @@ with concentrated, correlated, deep-drawdown risk.
 | APLD | Applied Digital | Data centers |
 | PLTR | Palantir | Software / Defense |
 | PL | Planet Labs | Space / Imaging |
-| NASA | Tema Space Innovators ETF | Space ETF (launched ~Mar 2026) |
 | VTI | Vanguard Total Market ETF | Broad-market benchmark |
 | VOO | Vanguard S&P 500 ETF | Broad-market benchmark |
 
-**Weighting:** equal-weight (1/15 each) for all basket-level figures. VOO/VTI double as the
+**Weighting:** equal-weight (1/14 each) for all basket-level figures. VOO/VTI double as the
 built-in "boring benchmark" to compare against.
 **Window:** 2024-01-01 → 2026-07-01 (~625 trading days). Data via `yfinance`, stored in DuckDB.
 
@@ -44,14 +43,14 @@ built-in "boring benchmark" to compare against.
 | Max drawdown | −33.8% | −18.7% |
 | Sharpe ratio (rf 4.5%) | **1.93** | 1.07 |
 
-\*14 full-history names; NASA excluded from basket-level stats (only ~63 days of history).
+\*Equal-weight (1/14) across all 14 names, daily-rebalanced.
 
 **6.5× the S&P's return — but 2.3× the volatility and nearly 2× the worst drawdown.** The excess
 return was not free; it was paid for in stomach. Yet even after adjusting for that risk, the basket's
 **Sharpe of 1.93 beats the S&P's 1.07** — over this window, the concentration was rewarded per unit of risk, not just in raw return.
 
-### 2. A third of the basket is *directly* semiconductors
-Equal-weight, **33.3%** sits in semis (NVDA, MU, MRVL, AVGO + the SMH ETF) before even looking
+### 2. Over a third of the basket is *directly* semiconductors
+Equal-weight, **35.7%** sits in semis (NVDA, MU, MRVL, AVGO + the SMH ETF) before even looking
 *through* the broad ETFs (VTI/VOO also hold NVDA/AVGO internally — true exposure is higher still).
 
 ### 3. The semis move as one — diversification is partly an illusion
@@ -83,15 +82,12 @@ Ranking by **Sharpe ratio** (excess return over a 4.5% risk-free rate, per unit 
 | VOO | +63% | 16% | −19% | 1.07 |
 | VTI | +62% | 16% | −19% | 1.01 |
 | MSFT | +3% | 25% | −35% | −0.01 |
-| NASA† | +21% | 69% | −37% | 1.38 |
 
-†NASA has only ~63 trading days (recent launch) — figures shown for completeness but not
-statistically comparable to the full-history names.
-
-## Data-quality note
-`NASA` (Tema Space Innovators ETF) returned only ~63 rows vs ~625 for every other name — consistent
-with a ~March 2026 launch. It's real and tradeable but too young for long-window statistics
-(moving averages, stable correlations), so it's flagged and excluded from basket aggregates.
+## Why 14 names, not 15
+The original screen included **NASA** (Tema Space Innovators ETF), but it launched ~March 2026 and
+returned only ~63 trading days of data vs ~625 for every other name. That's too little history for
+comparable volatility, drawdown, or correlation stats, so it was **dropped as an outlier** — a
+data-quality call, documented rather than silently ignored.
 
 ## Reproduce it
 ```bash
@@ -109,6 +105,27 @@ python analyze.py        # downloads data, loads DuckDB, prints every figure abo
 - **Sharpe ratio** = (annualized return − 4.5% risk-free) ÷ annualized volatility. The risk-free rate
   is a documented constant (≈ the T-bill average over the window), **not zero** — using zero would
   overstate every Sharpe.
+
+## Limitations & biases
+The findings above are real, but they describe *this basket over this window* — not "what an AI/chip
+strategy earns." Read them with these caveats, which materially affect the numbers:
+
+- **Selection / survivorship bias — the biggest one.** These 14 names were chosen *with hindsight* as
+  popular AI/chip winners. A large part of the +410% is simply the result of picking names we already
+  knew went up. A basket assembled in Jan 2024 *without* foresight — including the AI/chip names that
+  stalled, fell, or delisted — would almost certainly show far lower returns. **This measures what
+  specific winners did, not what the strategy returns going forward.**
+- **One regime, one window.** 2024–2026 was an exceptional AI-driven bull market. The same basket
+  through a semiconductor downturn (2018, 2022) would look very different. One period is one draw.
+- **Frictionless assumptions.** No transaction costs, spreads, taxes, or slippage. Daily rebalancing is
+  treated as free; in reality it is not.
+- **Equal-weight is arbitrary.** 1/14 is an illustrative construction, not an optimized or realistic
+  allocation. Cap-weighting or conviction-sizing would change every risk/return figure.
+- **Sharpe understates tail risk.** It assumes a constant risk-free rate and treats volatility as the
+  whole story. These names have fat left tails (−50% to −70% drawdowns), so a downside-aware measure
+  (Sortino, drawdown-adjusted) would be less flattering than the 1.93.
+- **Correlations are a full-window average.** The 0.64 is static; in practice correlations spike in
+  selloffs, so realized diversification is *worse* exactly when it matters most.
 
 ## Stack
 `yfinance` (ingest) → `pandas` (reshape) → `DuckDB` (store + SQL) → `numpy` (stats).
